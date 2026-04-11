@@ -9,6 +9,11 @@ from src.retrieval.dense import DenseRetriever
 from src.retrieval.sparse import SparseRetriever
 from src.utils.models import Chunk, RetrievalResult
 
+try:
+    from src.retrieval.reranker import CrossEncoderReranker
+except ImportError:
+    CrossEncoderReranker = None  # type: ignore[assignment, misc]
+
 logger = logging.getLogger(__name__)
 
 
@@ -26,11 +31,13 @@ class HybridRetriever:
         sparse_retriever: SparseRetriever,
         dense_weight: float = 0.6,
         sparse_weight: float = 0.4,
+        reranker: Optional["CrossEncoderReranker"] = None,  # type: ignore[type-arg]
     ) -> None:
         self.dense = dense_retriever
         self.sparse = sparse_retriever
         self.dense_weight = dense_weight
         self.sparse_weight = sparse_weight
+        self.reranker = reranker
 
     def index(self, chunks: list[Chunk]) -> None:
         """Index chunks in both dense and sparse retrievers.
@@ -59,11 +66,18 @@ class HybridRetriever:
             List of RetrievalResult sorted by combined score.
         """
         if method == "dense":
-            return self.dense.retrieve(query, top_k)
+            results = self.dense.retrieve(query, top_k)
         elif method == "sparse":
-            return self.sparse.retrieve(query, top_k)
+            results = self.sparse.retrieve(query, top_k)
         else:
-            return self._hybrid_retrieve(query, top_k)
+            results = self._hybrid_retrieve(query, top_k)
+
+        # Optional second-stage reranking
+        if self.reranker is not None and results:
+            logger.debug("Applying cross-encoder reranker to %d candidates", len(results))
+            results = self.reranker.rerank(query, results)
+
+        return results
 
     def _hybrid_retrieve(self, query: str, top_k: int) -> list[RetrievalResult]:
         """Combine dense and sparse results using RRF + weighted scores."""

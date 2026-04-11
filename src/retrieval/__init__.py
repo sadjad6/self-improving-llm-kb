@@ -7,7 +7,8 @@ __all__ = ["SparseRetriever"]
 try:
     from src.retrieval.dense import DenseRetriever
     from src.retrieval.hybrid import HybridRetriever
-    __all__ += ["DenseRetriever", "HybridRetriever"]
+    from src.retrieval.reranker import CrossEncoderReranker
+    __all__ += ["DenseRetriever", "HybridRetriever", "CrossEncoderReranker"]
 except ImportError:
     pass
 

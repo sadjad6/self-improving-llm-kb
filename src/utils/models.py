@@ -3,8 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
+
+
+def _utc_now() -> str:
+    """Return current UTC time as an ISO 8601 string (timezone-aware)."""
+    return datetime.now(UTC).isoformat()
 
 
 @dataclass
@@ -40,7 +45,7 @@ class RetrievalResult:
 
     chunk: Chunk
     score: float
-    method: str  # "dense", "sparse", "hybrid"
+    method: str  # "dense", "sparse", "hybrid", "reranked"
 
 
 @dataclass
@@ -53,7 +58,7 @@ class QueryResult:
     retrieval_method: str
     latency_ms: float = 0.0
     token_usage: dict[str, int] = field(default_factory=dict)
-    timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    timestamp: str = field(default_factory=_utc_now)
 
 
 @dataclass
