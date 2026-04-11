@@ -89,6 +89,8 @@ with st.sidebar:
         st.metric("Indexed Chunks", len(pipeline._chunks))
         mem_stats = pipeline.memory.get_stats()
         st.metric("Memory Entries", mem_stats["total_entries"])
+    except ValueError as exc:
+        st.warning(f"⚠️ {exc}")
     except Exception:
         st.info("Pipeline not yet loaded.")
 
@@ -103,12 +105,19 @@ query = st.text_input(
 )
 
 if query:
-    pipeline = get_pipeline()
-
-    with st.spinner("🔍 Retrieving & generating answer..."):
-        start = time.time()
-        result = pipeline.query(query, method=retrieval_method, top_k=top_k)
-        wall_time = (time.time() - start) * 1000
+    try:
+        pipeline = get_pipeline()
+    except ValueError as exc:
+        st.error(
+            f"⚠️ **Configuration error:** {exc}\n\n"
+            "Set `OPENAI_API_KEY` in your `.env` file and restart the app."
+        )
+        st.stop()
+    else:
+        with st.spinner("🔍 Retrieving & generating answer..."):
+            start = time.time()
+            result = pipeline.query(query, method=retrieval_method, top_k=top_k)
+            wall_time = (time.time() - start) * 1000
 
     # ── Metadata bar ──
     col1, col2, col3, col4 = st.columns(4)

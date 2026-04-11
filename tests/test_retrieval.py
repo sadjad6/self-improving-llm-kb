@@ -1,5 +1,7 @@
 """Tests for the retrieval system."""
 
+from pathlib import Path
+
 import pytest
 
 from src.retrieval.sparse import SparseRetriever, _tokenize
@@ -53,24 +55,26 @@ class TestSparseRetriever:
 
 
 class TestDenseRetriever:
-    def test_index_and_retrieve(self) -> None:
-        retriever = DenseRetriever(index_path="data/indices/test_faiss.index")
+    def test_index_and_retrieve(self, tmp_path: Path) -> None:
+        index_path = str(tmp_path / "test_faiss.index")
+        retriever = DenseRetriever(index_path=index_path)
         chunks = _make_chunks()
         retriever.index(chunks)
         results = retriever.retrieve("What is machine learning?", top_k=3)
         assert len(results) > 0
         assert results[0].method == "dense"
 
-    def test_retrieve_returns_scores(self) -> None:
-        retriever = DenseRetriever(index_path="data/indices/test_faiss.index")
+    def test_retrieve_returns_scores(self, tmp_path: Path) -> None:
+        index_path = str(tmp_path / "test_faiss_scores.index")
+        retriever = DenseRetriever(index_path=index_path)
         retriever.index(_make_chunks())
         results = retriever.retrieve("transformers attention")
         assert all(r.score is not None for r in results)
 
 
 class TestHybridRetriever:
-    def test_hybrid_retrieve(self) -> None:
-        dense = DenseRetriever(index_path="data/indices/test_hybrid.index")
+    def test_hybrid_retrieve(self, tmp_path: Path) -> None:
+        dense = DenseRetriever(index_path=str(tmp_path / "hybrid.index"))
         sparse = SparseRetriever()
         hybrid = HybridRetriever(dense, sparse, dense_weight=0.6, sparse_weight=0.4)
         chunks = _make_chunks()
@@ -80,16 +84,16 @@ class TestHybridRetriever:
         assert len(results) > 0
         assert results[0].method == "hybrid"
 
-    def test_dense_only_mode(self) -> None:
-        dense = DenseRetriever(index_path="data/indices/test_dense_only.index")
+    def test_dense_only_mode(self, tmp_path: Path) -> None:
+        dense = DenseRetriever(index_path=str(tmp_path / "dense_only.index"))
         sparse = SparseRetriever()
         hybrid = HybridRetriever(dense, sparse)
         hybrid.index(_make_chunks())
         results = hybrid.retrieve("transformers", top_k=2, method="dense")
         assert all(r.method == "dense" for r in results)
 
-    def test_sparse_only_mode(self) -> None:
-        dense = DenseRetriever(index_path="data/indices/test_sparse_only.index")
+    def test_sparse_only_mode(self, tmp_path: Path) -> None:
+        dense = DenseRetriever(index_path=str(tmp_path / "sparse_only.index"))
         sparse = SparseRetriever()
         hybrid = HybridRetriever(dense, sparse)
         hybrid.index(_make_chunks())

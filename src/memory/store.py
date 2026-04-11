@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import dataclasses
 import hashlib
 import json
 import logging
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Optional
 
@@ -89,18 +91,20 @@ class MemoryStore:
 
         query_terms = set(query.lower().split())
         scored: list[tuple[float, MemoryEntry]] = []
+        now = datetime.now(UTC)
 
         for entry in self._entries:
             entry_terms = set(entry.query.lower().split())
             overlap = len(query_terms & entry_terms)
             if overlap == 0:
                 continue
-            # Score based on term overlap, importance, and recency
+            # Score based on term overlap, importance, and actual recency
             term_score = overlap / max(len(query_terms), 1)
+            recency_score = self._compute_recency(entry.timestamp, now)
             combined = (
                 term_score * 0.5
                 + entry.importance_score * self.config.frequency_weight
-                + (entry.access_count / 10) * self.config.recency_weight
+                + recency_score * self.config.recency_weight
             )
             scored.append((combined, entry))
 
@@ -137,16 +141,14 @@ class MemoryStore:
 
     def get_stats(self) -> dict:
         """Get memory store statistics."""
+        avg_importance = (
+            sum(e.importance_score for e in self._entries) / len(self._entries)
+            if self._entries else 0.0
+        )
         return {
             "total_entries": len(self._entries),
-            "avg_importance": (
-                sum(e.importance_score for e in self._entries) / len(self._entries)
-                if self._entries else 0.0
-            ),
-            "average_score": (
-                sum(e.importance_score for e in self._entries) / len(self._entries)
-                if self._entries else 0.0
-            ),
+            "avg_importance": avg_importance,
+            "average_score": avg_importance,  # alias kept for UI compatibility
             "total_accesses": sum(e.access_count for e in self._entries),
         }
 
@@ -191,12 +193,29 @@ class MemoryStore:
         self._entries = self._entries[: self.config.max_history]
         logger.info("Pruned %d low-importance memory entries.", removed)
 
+    @staticmethod
+    def _compute_recency(timestamp: str, now: datetime) -> float:
+        """Compute a 0-1 recency score; newer entries score higher.
+
+        Uses a half-life of 7 days so entries decay to ~0.5 after one week.
+        """
+        try:
+            # Parse both naive (legacy) and aware timestamps
+            ts = datetime.fromisoformat(timestamp)
+            if ts.tzinfo is None:
+                ts = ts.replace(tzinfo=UTC)
+            age_days = (now - ts).total_seconds() / 86_400
+            # Exponential decay: score = 2^(-age/7)
+            return 2 ** (-age_days / 7)
+        except (ValueError, TypeError):
+            return 0.5  # Neutral score on parse failure
+
     def _save(self) -> None:
-        """Persist entries to disk."""
+        """Persist entries to disk using dataclasses.asdict for safety."""
         self.store_path.parent.mkdir(parents=True, exist_ok=True)
         with open(self.store_path, "w", encoding="utf-8") as f:
             for entry in self._entries:
-                f.write(json.dumps(entry.__dict__) + "\n")
+                f.write(json.dumps(dataclasses.asdict(entry)) + "\n")
 
     def _load(self) -> None:
         """Load entries from disk."""

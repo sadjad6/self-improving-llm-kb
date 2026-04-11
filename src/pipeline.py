@@ -17,6 +17,11 @@ from src.retrieval.sparse import SparseRetriever
 from src.utils.config import AppConfig, load_config
 from src.utils.models import Chunk, QueryResult, RetrievalResult
 
+try:
+    from src.retrieval.reranker import CrossEncoderReranker
+except ImportError:
+    CrossEncoderReranker = None  # type: ignore[assignment, misc]
+
 logger = logging.getLogger(__name__)
 
 
@@ -27,8 +32,13 @@ class KnowledgePipeline:
     Supports dense, sparse, and hybrid retrieval modes.
     """
 
-    def __init__(self, config: Optional[AppConfig] = None) -> None:
+    def __init__(
+        self,
+        config: Optional[AppConfig] = None,
+        experiment_tracker: Optional[object] = None,
+    ) -> None:
         self.config = config or load_config()
+        self._tracker = experiment_tracker
 
         # Components (lazy-initialized)
         self.parser = MarkdownParser(
@@ -45,11 +55,27 @@ class KnowledgePipeline:
             index_path=self.config.retrieval.dense.index_path,
         )
         self.sparse_retriever = SparseRetriever()
+
+        # Build optional reranker
+        reranker = None
+        if (
+            CrossEncoderReranker is not None
+            and self.config.retrieval.reranker.enabled
+        ):
+            reranker = CrossEncoderReranker(
+                model_name=self.config.retrieval.reranker.model_name,
+                top_k=self.config.retrieval.reranker.top_k,
+            )
+            logger.info(
+                "Reranker enabled: %s", self.config.retrieval.reranker.model_name
+            )
+
         self.hybrid_retriever = HybridRetriever(
             dense_retriever=self.dense_retriever,
             sparse_retriever=self.sparse_retriever,
             dense_weight=self.config.retrieval.hybrid.dense_weight,
             sparse_weight=self.config.retrieval.hybrid.sparse_weight,
+            reranker=reranker,
         )
         self.reasoner = LLMReasoner(config=self.config.llm)
         self.memory = MemoryStore(config=self.config.memory)
@@ -137,6 +163,18 @@ class KnowledgePipeline:
             "Query answered in %.0fms (method=%s, chunks=%d, tokens=%d)",
             latency, method, len(results), usage.get("total_tokens", 0),
         )
+
+        # Log to experiment tracker if one is attached
+        if self._tracker is not None:
+            try:
+                self._tracker.log_metrics({  # type: ignore[union-attr]
+                    "latency_ms": latency,
+                    "chunks_retrieved": float(len(results)),
+                    "total_tokens": float(usage.get("total_tokens", 0)),
+                })
+            except Exception as exc:
+                logger.warning("Failed to log metrics to tracker: %s", exc)
+
         return query_result
 
     def retrieve_only(

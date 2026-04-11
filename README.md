@@ -1,5 +1,7 @@
 # 🧠 Self-Improving LLM Knowledge Base
 
+[![CI](https://github.com/sadjad6/self-improving-llm-kb/actions/workflows/ci.yml/badge.svg)](https://github.com/sadjad6/self-improving-llm-kb/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/sadjad6/self-improving-llm-kb/branch/main/graph/badge.svg)](https://codecov.io/gh/sadjad6/self-improving-llm-kb)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 

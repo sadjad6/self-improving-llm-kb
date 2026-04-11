@@ -1,0 +1,135 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  # ──────────────────────────────────────────────────────────
+  # Job 1: Lint with Ruff
+  # ──────────────────────────────────────────────────────────
+  lint:
+    name: Lint (Ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Ruff
+        run: pip install ruff==0.4.4
+
+      - name: Run Ruff linter
+        run: ruff check src/ tests/ scripts/ cli.py --output-format=github
+
+      - name: Run Ruff formatter check
+        run: ruff format --check src/ tests/ scripts/ cli.py
+
+  # ──────────────────────────────────────────────────────────
+  # Job 2: Unit & Integration Tests
+  # ──────────────────────────────────────────────────────────
+  test:
+    name: Test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{ matrix.python-version }}-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run tests with coverage
+        env:
+          # Provide a dummy key so imports don't fail — no real API calls are made in tests
+          OPENAI_API_KEY: "sk-test-placeholder"
+        run: |
+          pytest tests/ -v --tb=short \
+            --cov=src \
+            --cov-report=term-missing \
+            --cov-report=xml:coverage.xml
+
+      - name: Upload coverage to Codecov
+        # Only upload from the primary version to avoid duplicate reports
+        if: matrix.python-version == '3.11'
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage.xml
+          flags: unittests
+          fail_ci_if_error: false
+
+  # ──────────────────────────────────────────────────────────
+  # Job 3: Build sanity check (importable as a package)
+  # ──────────────────────────────────────────────────────────
+  build:
+    name: Build Check
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install build tool
+        run: pip install hatch
+
+      - name: Build wheel
+        run: hatch build --target wheel
+
+      - name: Verify wheel installs cleanly
+        run: |
+          pip install dist/*.whl
+          python -c "import src.pipeline; print('Import OK')"
+
+  # ──────────────────────────────────────────────────────────
+  # Job 4: Security scan (pip-audit)
+  # ──────────────────────────────────────────────────────────
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install pip-audit
+        run: pip install pip-audit
+
+      - name: Audit dependencies for known vulnerabilities
+        run: pip-audit -r requirements.txt --ignore-vuln PYSEC-2022-42969
