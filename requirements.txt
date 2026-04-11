@@ -1,0 +1,31 @@
+# Core
+faiss-cpu>=1.7.4
+rank-bm25>=0.2.2
+openai>=1.14.0
+sentence-transformers>=2.5.0
+numpy>=1.24.0
+
+# Ingestion
+markdown-it-py>=3.0.0
+pyyaml>=6.0.1
+
+# Experiment Tracking
+mlflow>=2.11.0
+
+# Interface
+streamlit>=1.32.0
+click>=8.1.7
+rich>=13.7.0
+
+# Evaluation
+scikit-learn>=1.4.0
+
+# Testing
+pytest>=8.0.0
+pytest-cov>=4.1.0
+
+# Utilities
+python-dotenv>=1.0.0
+tiktoken>=0.6.0
+tenacity>=8.2.0
+

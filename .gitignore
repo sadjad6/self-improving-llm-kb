@@ -1,0 +1,35 @@
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Environment
+.env
+
+# Data artifacts
+data/indices/
+data/memory/
+mlflow_runs/
+mlruns/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+pip_log*.txt
+pip_full.txt
+*.log
+
