@@ -117,7 +117,8 @@ class HybridRetriever:
 
         logger.debug(
             "Hybrid retrieval: %d dense + %d sparse → %d fused results",
-            len(dense_results), len(sparse_results), len(results),
+            len(dense_results),
+            len(sparse_results),
+            len(results),
         )
         return results
-

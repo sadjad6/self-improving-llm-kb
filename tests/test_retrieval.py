@@ -3,7 +3,6 @@
 from pathlib import Path
 
 
-
 from src.retrieval.sparse import SparseRetriever, _tokenize
 from src.retrieval.dense import DenseRetriever
 from src.retrieval.hybrid import HybridRetriever
@@ -13,11 +12,41 @@ from src.utils.models import Chunk
 def _make_chunks() -> list[Chunk]:
     """Create sample chunks for testing."""
     return [
-        Chunk(id="c1", document_id="d1", content="Machine learning is a subset of artificial intelligence", index=0, metadata={"title": "ML Basics"}),
-        Chunk(id="c2", document_id="d1", content="Neural networks are inspired by biological brains", index=1, metadata={"title": "ML Basics"}),
-        Chunk(id="c3", document_id="d2", content="Transformers use self-attention mechanisms for sequence processing", index=0, metadata={"title": "Transformers"}),
-        Chunk(id="c4", document_id="d2", content="BERT is a bidirectional encoder transformer model", index=1, metadata={"title": "Transformers"}),
-        Chunk(id="c5", document_id="d3", content="RAG combines retrieval with language model generation", index=0, metadata={"title": "RAG"}),
+        Chunk(
+            id="c1",
+            document_id="d1",
+            content="Machine learning is a subset of artificial intelligence",
+            index=0,
+            metadata={"title": "ML Basics"},
+        ),
+        Chunk(
+            id="c2",
+            document_id="d1",
+            content="Neural networks are inspired by biological brains",
+            index=1,
+            metadata={"title": "ML Basics"},
+        ),
+        Chunk(
+            id="c3",
+            document_id="d2",
+            content="Transformers use self-attention mechanisms for sequence processing",
+            index=0,
+            metadata={"title": "Transformers"},
+        ),
+        Chunk(
+            id="c4",
+            document_id="d2",
+            content="BERT is a bidirectional encoder transformer model",
+            index=1,
+            metadata={"title": "Transformers"},
+        ),
+        Chunk(
+            id="c5",
+            document_id="d3",
+            content="RAG combines retrieval with language model generation",
+            index=0,
+            metadata={"title": "RAG"},
+        ),
     ]
 
 
@@ -39,7 +68,10 @@ class TestSparseRetriever:
         assert len(results) > 0
         assert results[0].method == "sparse"
         # Top result should be about ML
-        assert "machine" in results[0].chunk.content.lower() or "artificial" in results[0].chunk.content.lower()
+        assert (
+            "machine" in results[0].chunk.content.lower()
+            or "artificial" in results[0].chunk.content.lower()
+        )
 
     def test_retrieve_empty_index(self) -> None:
         retriever = SparseRetriever()
@@ -99,4 +131,3 @@ class TestHybridRetriever:
         hybrid.index(_make_chunks())
         results = hybrid.retrieve("transformers", top_k=2, method="sparse")
         assert all(r.method == "sparse" for r in results)
-

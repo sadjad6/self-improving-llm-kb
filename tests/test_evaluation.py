@@ -1,7 +1,5 @@
 """Tests for evaluation metrics."""
 
-
-
 from src.evaluation.metrics import RetrievalEvaluator, AnswerEvaluator
 from src.utils.models import Chunk, RetrievalResult
 
@@ -79,4 +77,3 @@ class TestAnswerEvaluator:
         prompt = AnswerEvaluator.llm_judge_prompt("q?", "answer", "context text")
         assert "relevance" in prompt.lower()
         assert "faithfulness" in prompt.lower()
-

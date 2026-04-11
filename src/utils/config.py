@@ -11,6 +11,7 @@ import yaml
 
 try:
     from dotenv import load_dotenv
+
     load_dotenv()
 except ImportError:
     pass
@@ -173,4 +174,3 @@ def load_config(path: str | Path | None = None) -> AppConfig:
     if "experiment" in raw:
         config.experiment = _build_dataclass(ExperimentConfig, raw["experiment"])
     return config
-

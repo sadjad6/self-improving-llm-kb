@@ -30,17 +30,23 @@ def sample_chunks() -> list[Chunk]:
     """A small set of chunks useful across test modules."""
     return [
         Chunk(
-            id="c1", document_id="d1", index=0,
+            id="c1",
+            document_id="d1",
+            index=0,
             content="Machine learning is a subset of artificial intelligence.",
             metadata={"title": "ML Basics"},
         ),
         Chunk(
-            id="c2", document_id="d1", index=1,
+            id="c2",
+            document_id="d1",
+            index=1,
             content="Neural networks are inspired by biological brains.",
             metadata={"title": "ML Basics"},
         ),
         Chunk(
-            id="c3", document_id="d2", index=0,
+            id="c3",
+            document_id="d2",
+            index=0,
             content="Transformers use self-attention mechanisms.",
             metadata={"title": "Transformers"},
         ),
@@ -66,4 +72,3 @@ def sample_md_file(tmp_path: Path) -> Path:
     fp = tmp_path / "sample.md"
     fp.write_text(SAMPLE_MD, encoding="utf-8")
     return fp
-

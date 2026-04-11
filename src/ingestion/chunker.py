@@ -46,9 +46,7 @@ class SemanticChunker:
         for heading, section_text in sections:
             section_chunks = self._split_section(section_text, heading)
             for i, text in enumerate(section_chunks):
-                chunk_id = hashlib.md5(
-                    f"{document.id}:{heading}:{i}".encode()
-                ).hexdigest()[:12]
+                chunk_id = hashlib.md5(f"{document.id}:{heading}:{i}".encode()).hexdigest()[:12]
                 chunk = Chunk(
                     id=chunk_id,
                     document_id=document.id,
@@ -63,9 +61,7 @@ class SemanticChunker:
                 )
                 chunks.append(chunk)
 
-        logger.info(
-            "Chunked '%s' into %d chunks", document.title, len(chunks)
-        )
+        logger.info("Chunked '%s' into %d chunks", document.title, len(chunks))
         return chunks
 
     def chunk_documents(self, documents: list[Document]) -> list[Chunk]:
@@ -142,4 +138,3 @@ class SemanticChunker:
     def _estimate_tokens(text: str) -> int:
         """Rough token estimate (~4 chars per token for English)."""
         return len(text) // 4
-

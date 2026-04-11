@@ -148,7 +148,16 @@ class AnswerEvaluator:
             scores["grounding"] = 0.0
 
         # Query coverage (does answer address query terms?)
-        query_terms = set(query.lower().split()) - {"what", "is", "the", "a", "an", "how", "why", "does"}
+        query_terms = set(query.lower().split()) - {
+            "what",
+            "is",
+            "the",
+            "a",
+            "an",
+            "how",
+            "why",
+            "does",
+        }
         if query_terms:
             coverage = len(query_terms & answer_terms) / len(query_terms)
             scores["query_coverage"] = min(1.0, coverage)
@@ -183,6 +192,5 @@ class AnswerEvaluator:
             f"Question: {query}\n\n"
             f"Context: {context[:2000]}\n\n"
             f"Answer: {answer}\n\n"
-            f"Respond with JSON: {{\"relevance\": X, \"faithfulness\": X, \"completeness\": X}}"
+            f'Respond with JSON: {{"relevance": X, "faithfulness": X, "completeness": X}}'
         )
-

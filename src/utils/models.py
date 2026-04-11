@@ -73,4 +73,3 @@ class MemoryEntry:
     importance_score: float = 0.5
     access_count: int = 1
     summary: str = ""
-

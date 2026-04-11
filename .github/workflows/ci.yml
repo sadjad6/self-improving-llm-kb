@@ -28,8 +28,8 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Install Ruff
-        run: pip install ruff==0.4.4
+      - name: Install dev dependencies (includes ruff)
+        run: pip install -e '.[dev]'
 
       - name: Run Ruff linter
         run: ruff check src/ tests/ scripts/ cli.py --output-format=github

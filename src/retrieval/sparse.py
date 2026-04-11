@@ -83,4 +83,3 @@ class SparseRetriever:
                 )
             )
         return results
-

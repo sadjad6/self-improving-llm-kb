@@ -113,4 +113,3 @@ class TestSemanticChunker:
         chunker = SemanticChunker()
         chunks = chunker.chunk_documents(docs)
         assert len(chunks) >= len(docs)
-

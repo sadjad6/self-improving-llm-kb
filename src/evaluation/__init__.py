@@ -6,7 +6,7 @@ __all__ = ["RetrievalEvaluator", "AnswerEvaluator"]
 
 try:
     from src.evaluation.tracker import ExperimentTracker
+
     __all__ += ["ExperimentTracker"]
 except ImportError:
     pass
-
