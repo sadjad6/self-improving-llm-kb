@@ -2,8 +2,6 @@
 
 from pathlib import Path
 
-import pytest
-
 from src.utils.config import AppConfig, load_config
 
 

@@ -1,6 +1,6 @@
 """Tests for evaluation metrics."""
 
-import pytest
+
 
 from src.evaluation.metrics import RetrievalEvaluator, AnswerEvaluator
 from src.utils.models import Chunk, RetrievalResult

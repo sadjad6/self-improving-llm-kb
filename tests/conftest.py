@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from src.ingestion.parser import MarkdownParser
+
 from src.utils.models import Chunk, QueryResult, RetrievalResult
 
 SAMPLE_MD = """# Sample Document

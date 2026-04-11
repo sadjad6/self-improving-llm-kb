@@ -6,7 +6,7 @@ import dataclasses
 import hashlib
 import json
 import logging
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -91,7 +91,7 @@ class MemoryStore:
 
         query_terms = set(query.lower().split())
         scored: list[tuple[float, MemoryEntry]] = []
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         for entry in self._entries:
             entry_terms = set(entry.query.lower().split())
@@ -200,12 +200,10 @@ class MemoryStore:
         Uses a half-life of 7 days so entries decay to ~0.5 after one week.
         """
         try:
-            # Parse both naive (legacy) and aware timestamps
             ts = datetime.fromisoformat(timestamp)
             if ts.tzinfo is None:
-                ts = ts.replace(tzinfo=UTC)
+                ts = ts.replace(tzinfo=timezone.utc)
             age_days = (now - ts).total_seconds() / 86_400
-            # Exponential decay: score = 2^(-age/7)
             return 2 ** (-age_days / 7)
         except (ValueError, TypeError):
             return 0.5  # Neutral score on parse failure
