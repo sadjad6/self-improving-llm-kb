@@ -62,9 +62,7 @@ class ExperimentTracker:
                 value = getattr(config, field_name)
                 if hasattr(value, "__dataclass_fields__"):
                     for sub_field in value.__dataclass_fields__:
-                        params[f"{field_name}.{sub_field}"] = str(
-                            getattr(value, sub_field)
-                        )
+                        params[f"{field_name}.{sub_field}"] = str(getattr(value, sub_field))
                 else:
                     params[field_name] = str(value)
             self.log_params(params)
@@ -74,4 +72,3 @@ class ExperimentTracker:
         mlflow.end_run()
         logger.info("Ended MLflow run: %s", self._run_id)
         self._run_id = None
-

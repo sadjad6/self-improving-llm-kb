@@ -40,7 +40,9 @@ class DenseRetriever:
         if faiss is None:
             raise ImportError("faiss-cpu is required: pip install faiss-cpu")
         if SentenceTransformer is None:
-            raise ImportError("sentence-transformers is required: pip install sentence-transformers")
+            raise ImportError(
+                "sentence-transformers is required: pip install sentence-transformers"
+            )
         self.model_name = model_name
         self.index_path = Path(index_path)
         self.chunks_path = self.index_path.with_suffix(".chunks.pkl")
@@ -129,4 +131,3 @@ class DenseRetriever:
         with open(self.chunks_path, "rb") as f:
             self._chunks = pickle.load(f)
         logger.info("Dense index loaded: %d vectors", self._index.ntotal)
-

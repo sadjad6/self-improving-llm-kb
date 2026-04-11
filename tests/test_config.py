@@ -27,4 +27,3 @@ class TestConfig:
         assert config.retrieval.dense.top_k == 10
         assert config.retrieval.sparse.algorithm == "bm25"
         assert config.retrieval.reranker.enabled is False
-

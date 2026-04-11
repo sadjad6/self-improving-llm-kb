@@ -58,17 +58,12 @@ class KnowledgePipeline:
 
         # Build optional reranker
         reranker = None
-        if (
-            CrossEncoderReranker is not None
-            and self.config.retrieval.reranker.enabled
-        ):
+        if CrossEncoderReranker is not None and self.config.retrieval.reranker.enabled:
             reranker = CrossEncoderReranker(
                 model_name=self.config.retrieval.reranker.model_name,
                 top_k=self.config.retrieval.reranker.top_k,
             )
-            logger.info(
-                "Reranker enabled: %s", self.config.retrieval.reranker.model_name
-            )
+            logger.info("Reranker enabled: %s", self.config.retrieval.reranker.model_name)
 
         self.hybrid_retriever = HybridRetriever(
             dense_retriever=self.dense_retriever,
@@ -106,7 +101,8 @@ class KnowledgePipeline:
 
         logger.info(
             "Ingestion complete: %d documents → %d chunks",
-            len(documents), len(self._chunks),
+            len(documents),
+            len(self._chunks),
         )
         return len(self._chunks)
 
@@ -161,17 +157,22 @@ class KnowledgePipeline:
 
         logger.info(
             "Query answered in %.0fms (method=%s, chunks=%d, tokens=%d)",
-            latency, method, len(results), usage.get("total_tokens", 0),
+            latency,
+            method,
+            len(results),
+            usage.get("total_tokens", 0),
         )
 
         # Log to experiment tracker if one is attached
         if self._tracker is not None:
             try:
-                self._tracker.log_metrics({  # type: ignore[union-attr]
-                    "latency_ms": latency,
-                    "chunks_retrieved": float(len(results)),
-                    "total_tokens": float(usage.get("total_tokens", 0)),
-                })
+                self._tracker.log_metrics(
+                    {  # type: ignore[union-attr]
+                        "latency_ms": latency,
+                        "chunks_retrieved": float(len(results)),
+                        "total_tokens": float(usage.get("total_tokens", 0)),
+                    }
+                )
             except Exception as exc:
                 logger.warning("Failed to log metrics to tracker: %s", exc)
 
@@ -191,4 +192,3 @@ class KnowledgePipeline:
             raise RuntimeError("Knowledge base not indexed. Call ingest() first.")
         k = top_k or self.config.retrieval.hybrid.top_k
         return self.hybrid_retriever.retrieve(question, top_k=k, method=method)
-

@@ -88,6 +88,8 @@ class CrossEncoderReranker:
 
         logger.debug(
             "Reranker: %d candidates → %d results (model=%s)",
-            len(results), len(reranked_results), self.model_name,
+            len(results),
+            len(reranked_results),
+            self.model_name,
         )
         return reranked_results

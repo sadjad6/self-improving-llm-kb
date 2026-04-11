@@ -69,9 +69,7 @@ K_VALUES = [1, 3, 5]
 
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
-    parser = argparse.ArgumentParser(
-        description="Evaluate the Self-Improving LLM Knowledge Base"
-    )
+    parser = argparse.ArgumentParser(description="Evaluate the Self-Improving LLM Knowledge Base")
     parser.add_argument(
         "--method",
         choices=["dense", "sparse", "hybrid"],
@@ -106,6 +104,7 @@ def _try_start_mlflow(config: object, run_name: str) -> object | None:
     """Attempt to start an MLflow run; return tracker or None on failure."""
     try:
         from src.evaluation.tracker import ExperimentTracker
+
         tracker = ExperimentTracker(config=config.experiment)  # type: ignore[union-attr]
         tracker.start_run(run_name=run_name)
         return tracker
@@ -129,11 +128,13 @@ def run_evaluation(
         run_name = f"eval_{method}_k{top_k}_{int(time.time())}"
         tracker = _try_start_mlflow(pipeline.config, run_name)
         if tracker:
-            tracker.log_params({
-                "method": method,
-                "top_k": top_k,
-                "model": pipeline.config.llm.model,
-            })
+            tracker.log_params(
+                {
+                    "method": method,
+                    "top_k": top_k,
+                    "model": pipeline.config.llm.model,
+                }
+            )
 
     all_results = []
     recall_scores: dict[int, list[float]] = {k: [] for k in K_VALUES}
@@ -162,9 +163,7 @@ def run_evaluation(
         # Retrieval metrics (only when relevant_ids are provided)
         if relevant_ids:
             for k in K_VALUES:
-                r_eval = retrieval_evaluator.recall_at_k(
-                    result.retrieved_chunks, relevant_ids, k
-                )
+                r_eval = retrieval_evaluator.recall_at_k(result.retrieved_chunks, relevant_ids, k)
                 recall_scores[k].append(r_eval.score)
 
             mrr_eval = retrieval_evaluator.mrr(result.retrieved_chunks, relevant_ids)
@@ -207,9 +206,7 @@ def run_evaluation(
         aggregated["avg_mrr"] = avg_mrr
         for k in K_VALUES:
             if recall_scores[k]:
-                aggregated[f"avg_recall@{k}"] = (
-                    sum(recall_scores[k]) / len(recall_scores[k])
-                )
+                aggregated[f"avg_recall@{k}"] = sum(recall_scores[k]) / len(recall_scores[k])
 
     print(f"\n{'='*60}")
     print("  Aggregated Results")
@@ -221,9 +218,7 @@ def run_evaluation(
             print(f"  {key:<30} {val}")
 
     if tracker:
-        tracker.log_metrics(
-            {k: v for k, v in aggregated.items() if isinstance(v, float)}
-        )
+        tracker.log_metrics({k: v for k, v in aggregated.items() if isinstance(v, float)})
         tracker.end_run()
         print("\n  ✓ Results logged to MLflow")
 

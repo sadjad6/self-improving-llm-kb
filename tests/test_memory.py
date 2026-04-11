@@ -9,7 +9,9 @@ from src.utils.config import MemoryConfig
 from src.utils.models import Chunk, QueryResult, RetrievalResult
 
 
-def _make_query_result(query: str = "What is ML?", answer: str = "ML is machine learning.") -> QueryResult:
+def _make_query_result(
+    query: str = "What is ML?", answer: str = "ML is machine learning."
+) -> QueryResult:
     chunk = Chunk(id="c1", document_id="d1", content="ML content", metadata={"title": "ML"})
     return QueryResult(
         query=query,
@@ -47,7 +49,9 @@ class TestMemoryStore:
 
     def test_get_relevant_history(self, memory_store: MemoryStore) -> None:
         memory_store.store_interaction(_make_query_result("What is machine learning?"))
-        memory_store.store_interaction(_make_query_result("How do neural networks work?", "They use layers."))
+        memory_store.store_interaction(
+            _make_query_result("How do neural networks work?", "They use layers.")
+        )
         history = memory_store.get_relevant_history("machine learning basics")
         assert len(history) > 0
 
@@ -94,4 +98,3 @@ class TestMemoryStore:
         assert path.exists()
         content = path.read_text()
         assert "ML is a key AI technique" in content
-

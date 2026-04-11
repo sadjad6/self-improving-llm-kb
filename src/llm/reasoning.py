@@ -21,7 +21,9 @@ except ImportError:
     def retry(**kwargs: Any):  # type: ignore[misc]
         def decorator(fn: Any) -> Any:
             return fn
+
         return decorator
+
     stop_after_attempt = None  # type: ignore[assignment]
     wait_exponential = None  # type: ignore[assignment]
 
@@ -76,8 +78,7 @@ class LLMReasoner:
             api_key = os.getenv("OPENAI_API_KEY")
             if not api_key:
                 raise ValueError(
-                    "OPENAI_API_KEY environment variable not set. "
-                    "Set it or create a .env file."
+                    "OPENAI_API_KEY environment variable not set. " "Set it or create a .env file."
                 )
             self._client = OpenAI(api_key=api_key)
         return self._client
@@ -199,4 +200,3 @@ class LLMReasoner:
             "total_tokens": response.usage.total_tokens if response.usage else 0,
         }
         return answer, usage
-

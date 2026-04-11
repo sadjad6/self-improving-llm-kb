@@ -43,9 +43,7 @@ class MemoryStore:
         Returns:
             The created MemoryEntry.
         """
-        entry_id = hashlib.md5(
-            f"{result.query}:{result.timestamp}".encode()
-        ).hexdigest()[:12]
+        entry_id = hashlib.md5(f"{result.query}:{result.timestamp}".encode()).hexdigest()[:12]
 
         context_texts = [r.chunk.content for r in result.retrieved_chunks]
 
@@ -73,7 +71,9 @@ class MemoryStore:
             self._prune()
 
         self._save()
-        logger.info("Stored new memory entry: %s (importance=%.2f)", entry.id, entry.importance_score)
+        logger.info(
+            "Stored new memory entry: %s (importance=%.2f)", entry.id, entry.importance_score
+        )
         return entry
 
     def get_relevant_history(self, query: str, top_k: int = 3) -> list[MemoryEntry]:
@@ -143,7 +143,8 @@ class MemoryStore:
         """Get memory store statistics."""
         avg_importance = (
             sum(e.importance_score for e in self._entries) / len(self._entries)
-            if self._entries else 0.0
+            if self._entries
+            else 0.0
         )
         return {
             "total_entries": len(self._entries),
@@ -227,4 +228,3 @@ class MemoryStore:
                     data = json.loads(line)
                     self._entries.append(MemoryEntry(**data))
         logger.info("Loaded %d memory entries.", len(self._entries))
-

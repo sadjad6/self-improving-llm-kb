@@ -55,7 +55,10 @@ class MarkdownParser:
 
         logger.debug(
             "Parsed %s: %d headings, %d links, %d tags",
-            filepath.name, len(headings), len(links), len(tags),
+            filepath.name,
+            len(headings),
+            len(links),
+            len(tags),
         )
 
         return Document(
@@ -112,4 +115,3 @@ class MarkdownParser:
     def _extract_tags(text: str) -> list[str]:
         """Extract hashtag-style tags."""
         return list(set(TAG_PATTERN.findall(text)))
-

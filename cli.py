@@ -83,15 +83,18 @@ def ask(ctx: click.Context, question: str, method: str, top_k: int) -> None:
 def memory_stats(ctx: click.Context) -> None:
     """Show memory system statistics."""
     from src.memory.store import MemoryStore
+
     cfg = ctx.obj["config"]
     store = MemoryStore(config=cfg.memory)
     stats = store.get_stats()
-    console.print(Panel(
-        f"Total entries: {stats['total_entries']}\n"
-        f"Avg importance: {stats['avg_importance']:.3f}\n"
-        f"Total accesses: {stats['total_accesses']}",
-        title="Memory Statistics",
-    ))
+    console.print(
+        Panel(
+            f"Total entries: {stats['total_entries']}\n"
+            f"Avg importance: {stats['avg_importance']:.3f}\n"
+            f"Total accesses: {stats['total_accesses']}",
+            title="Memory Statistics",
+        )
+    )
 
 
 @main.command()
@@ -100,6 +103,7 @@ def memory_stats(ctx: click.Context) -> None:
 def evaluate(ctx: click.Context, method: str) -> None:
     """Run evaluation on sample queries."""
     from src.evaluation.metrics import AnswerEvaluator
+
     cfg = ctx.obj["config"]
     pipeline = KnowledgePipeline(config=cfg)
 
@@ -130,4 +134,3 @@ def evaluate(ctx: click.Context, method: str) -> None:
 
 if __name__ == "__main__":
     main()
-

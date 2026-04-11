@@ -100,4 +100,3 @@ class TestRetrieveOnly:
         assert len(results) > 0
         # Best result should mention machine learning
         assert "machine" in results[0].chunk.content.lower()
-
