@@ -6,7 +6,6 @@ import pytest
 
 from src.ingestion.parser import MarkdownParser
 from src.ingestion.chunker import SemanticChunker
-from src.utils.models import Document
 
 SAMPLE_MD = """# Test Document
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import logging
 import re
-from typing import Optional
+
 
 from src.utils.models import Chunk, Document
 

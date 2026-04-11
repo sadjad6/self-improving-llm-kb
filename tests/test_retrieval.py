@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-import pytest
+
 
 from src.retrieval.sparse import SparseRetriever, _tokenize
 from src.retrieval.dense import DenseRetriever

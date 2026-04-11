@@ -3,13 +3,11 @@
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 import pytest
 
 from src.ingestion.parser import MarkdownParser
 from src.ingestion.chunker import SemanticChunker
-from src.utils.models import Chunk, RetrievalResult
 
 
 SAMPLE_DOCS = {
