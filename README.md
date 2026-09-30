@@ -1,11 +1,7 @@
 # 🧠 Self-Improving LLM Knowledge Base
 
-![Self-Improving LLM Knowledge Base Banner](./hero_banner.png)
-
 [![CI](https://github.com/sadjad6/self-improving-llm-kb/actions/workflows/ci.yml/badge.svg)](https://github.com/sadjad6/self-improving-llm-kb/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/sadjad6/self-improving-llm-kb/branch/main/graph/badge.svg)](https://codecov.io/gh/sadjad6/self-improving-llm-kb)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 A RAG portfolio project with FAISS/BM25 hybrid retrieval, persistent Q&A memory, and generated summary notes. It demonstrates components for an iterative knowledge workflow; summaries are not automatically reindexed and the model does not train on interactions.
 
@@ -259,6 +255,6 @@ Comprehensive documentation is available in the [`docs/`](docs/) folder:
 
 ## 📄 License
 
-This project is licensed under the MIT License.
+The README's stated license is MIT, but a corresponding `LICENSE` file is not included in the repository.
 
 
