@@ -7,9 +7,9 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-A **production-grade Retrieval-Augmented Generation (RAG) system** with hybrid retrieval, persistent memory, and a self-improving feedback loop — inspired by Andrej Karpathy's vision of context engineering and iterative learning systems.
+A RAG portfolio project with FAISS/BM25 hybrid retrieval, persistent Q&A memory, and generated summary notes. It demonstrates components for an iterative knowledge workflow; summaries are not automatically reindexed and the model does not train on interactions.
 
-> This project demonstrates senior-level ML system design: clean architecture, modular components, reproducible experiments, and production-ready patterns.
+> The code is organized into ingestion, retrieval, generation, memory, and evaluation modules. Production readiness and retrieval/answer quality have not been established by a published benchmark or deployment.
 
 ---
 
@@ -18,10 +18,10 @@ A **production-grade Retrieval-Augmented Generation (RAG) system** with hybrid r
 | Feature | Description |
 |---|---|
 | 🔍 **Hybrid Retrieval** | Combines FAISS dense vectors with BM25 sparse scores via Reciprocal Rank Fusion (RRF) |
-| 📄 **Semantic Chunking** | Splits Markdown at natural boundaries (headings, paragraphs) while preserving heading context |
-| 🤖 **Grounded LLM Reasoning** | OpenAI GPT with strict anti-hallucination prompting and citation grounding |
-| 🧠 **Self-Improving Memory** | Persistent store that scores interactions, deduplicates queries, and writes learnings back to the KB |
-| 📊 **Evaluation Framework** | Recall@K, MRR, heuristic scoring, and LLM-as-Judge with MLflow experiment tracking |
+| 📄 **Markdown Chunking** | Splits Markdown at headings and paragraphs while preserving heading context |
+| 🤖 **Context-Based LLM Answers** | OpenAI GPT prompt asks for context-based answers and citations; citations and factual accuracy are not independently validated |
+| 🧠 **Persistent Memory** | Stores interactions, scores and deduplicates queries, and writes summaries to a separate directory; they require manual inclusion in the indexed knowledge base |
+| 📊 **Evaluation Utilities** | Recall@K/MRR functions, a heuristic answer score, an LLM-judge prompt template, and optional MLflow logging; the sample dataset has no relevance labels |
 | 🖥️ **Dual Interface** | Polished Streamlit web UI + Rich CLI |
 | 🛡️ **Graceful Degradation** | Soft-imported ML dependencies with clear error messages instead of crashes |
 
@@ -30,7 +30,7 @@ A **production-grade Retrieval-Augmented Generation (RAG) system** with hybrid r
 ## 🏗️ Architecture
 
 ```
-  Markdown Files ──▶ Parser ──▶ Semantic Chunker ──▶ Chunks
+  Markdown Files ──▶ Parser ──▶ Markdown Chunker ──▶ Chunks
                                                        │
                                      ┌─────────────────┤
                                      ▼                  ▼
@@ -44,7 +44,7 @@ A **production-grade Retrieval-Augmented Generation (RAG) system** with hybrid r
                                             │
                                             ▼
                                     LLM Reasoning
-                                  (grounded answer)
+                                (context-prompted answer)
                                             │
                                             ▼
                                      Memory Store
@@ -52,7 +52,7 @@ A **production-grade Retrieval-Augmented Generation (RAG) system** with hybrid r
                                             │
                                             ▼
                                      Summary Notes
-                               (written back to knowledge base)
+                             (separate memory directory)
 ```
 
 ---
@@ -99,7 +99,7 @@ streamlit run app/streamlit_app.py
 python cli.py ingest                                         # Index documents
 python cli.py ask "How do transformers work?" --method hybrid # Query with method selection
 python cli.py memory-stats                                   # View memory statistics
-python cli.py evaluate --method hybrid                       # Run evaluation benchmark
+python cli.py evaluate --method hybrid                       # Run sample answer checks
 ```
 
 ### Streamlit Web UI
@@ -108,7 +108,7 @@ python cli.py evaluate --method hybrid                       # Run evaluation be
 streamlit run app/streamlit_app.py
 ```
 
-Features: query panel, retrieved-context viewer with scores, performance metrics, memory & self-improvement dashboard, and architecture overview.
+Features: query panel, retrieved-context viewer with scores, performance metrics, memory dashboard, and architecture overview.
 
 ---
 
@@ -133,10 +133,10 @@ self-improving-llm-kb/
 │   ├── evaluation.md             # Metrics & experiment tracking
 │   └── api_reference.md          # Module API reference
 ├── src/
-│   ├── ingestion/                # Markdown parser + semantic chunker
+│   ├── ingestion/                # Markdown parser + heading/paragraph chunker
 │   ├── retrieval/                # Dense (FAISS), sparse (BM25), hybrid
 │   ├── llm/                      # LLM reasoning with context engineering
-│   ├── memory/                   # Persistent self-improving memory store
+│   ├── memory/                   # Persistent interaction and summary store
 │   ├── evaluation/               # Metrics (Recall@K, MRR) + MLflow tracker
 │   ├── utils/                    # Config, data models, logging
 │   └── pipeline.py               # Orchestration layer
@@ -147,27 +147,13 @@ self-improving-llm-kb/
 
 ---
 
-## 🧠 How the Self-Improving Loop Works
+## 🧠 How the Memory Workflow Works
 
-```
-User asks question → System answers (retrieve + LLM) → Interaction stored
-        ↑                                                       │
-        │                                               Importance scored
-        │                                                       │
-        │                                              Score ≥ 0.6?
-        │                                              ╱         ╲
-        │                                           Yes           No
-        │                                            │          (wait)
-        │                                   LLM generates summary
-        │                                            │
-        └──── Next ingest picks up ◄── Summary written as .md file
-```
-
-1. **Store** — Every Q&A interaction is persisted with an importance score
-2. **Deduplicate** — Similar queries (Jaccard ≥ 0.85) update existing entries instead of duplicating
-3. **Score** — Importance increases with query complexity and repeat access
-4. **Summarize** — High-importance entries trigger LLM-generated summaries
-5. **Feed back** — Summaries become new `.md` files, retrievable on next ingestion
+1. **Store** — Each Q&A interaction is persisted with an importance score.
+2. **Deduplicate** — Similar queries (Jaccard ≥ 0.85 by default) update an existing entry.
+3. **Score** — New entries receive a heuristic score based on retrieved-chunk count and answer length; repeated access raises it.
+4. **Summarize** — Entries scoring at least 0.6 trigger an LLM-generated Markdown note in `data/memory/summaries`.
+5. **Reindex manually** — The default ingestion path is `data/knowledge_base`. Move or copy a reviewed summary there and run ingestion again if you want it included in retrieval. The pipeline does not use stored history or summary notes when answering by default.
 
 → [Full details in docs/self_improving_loop.md](docs/self_improving_loop.md)
 
@@ -179,10 +165,10 @@ User asks question → System answers (retrieve + LLM) → Interaction stored
 |---|---|---|
 | **Recall@K** | Retrieval | Fraction of relevant chunks in top-K results |
 | **MRR** | Retrieval | Rank of the first relevant result |
-| **Heuristic Score** | Answer | Length, grounding, query coverage, hallucination detection |
-| **LLM-as-Judge** | Answer | Relevance, faithfulness, completeness (1–5 scale) |
+| **Heuristic Score** | Answer | Length, word overlap with context, query-term coverage, and refusal indicator; this is not hallucination detection |
+| **LLM-as-Judge prompt** | Template only | Builds a relevance/faithfulness/completeness prompt; no judge call or score is implemented |
 
-All experiments are tracked via **MLflow** for full reproducibility.
+`python scripts/evaluate.py` runs a small sample query set and can log results to **MLflow** when available. All sample `relevant_ids` sets are empty, so the script does not calculate Recall@K or MRR until relevance labels are supplied. No benchmark results are committed.
 
 → [Full details in docs/evaluation.md](docs/evaluation.md)
 
@@ -206,7 +192,7 @@ retrieval:
 
 llm:
   model: "gpt-4o-mini"
-  temperature: 0.1           # Low = less hallucination
+  temperature: 0.1           # Sampling temperature
 
 memory:
   enabled: true
@@ -256,7 +242,7 @@ Comprehensive documentation is available in the [`docs/`](docs/) folder:
 | [Architecture](docs/architecture.md) | Module-by-module design breakdown |
 | [Setup Guide](docs/setup.md) | Installation, configuration, troubleshooting |
 | [Usage Guide](docs/usage.md) | CLI commands, Streamlit UI, example workflows |
-| [Self-Improving Loop](docs/self_improving_loop.md) | Memory scoring, dedup, summary generation |
+| [Memory Workflow](docs/self_improving_loop.md) | Memory scoring, dedup, summary generation |
 | [Evaluation](docs/evaluation.md) | Metrics, LLM-as-Judge, MLflow tracking |
 | [API Reference](docs/api_reference.md) | All classes, methods, and data models |
 
@@ -274,4 +260,5 @@ Comprehensive documentation is available in the [`docs/`](docs/) folder:
 ## 📄 License
 
 This project is licensed under the MIT License.
+
 
