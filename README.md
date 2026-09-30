@@ -1,5 +1,9 @@
 # 🧠 Self-Improving LLM Knowledge Base
 
+![self-improving-llm-kb project artwork](./hero_banner.png)
+
+*Original concept artwork. Generated summaries require manual reindexing; automatic learning and quality improvements are not established.*
+
 [![CI](https://github.com/sadjad6/self-improving-llm-kb/actions/workflows/ci.yml/badge.svg)](https://github.com/sadjad6/self-improving-llm-kb/actions/workflows/ci.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 
